@@ -4,11 +4,15 @@ requires = [
     "cmake>=3.26.1",
     "ninja",
     "packaging>=24.2",
-    "setuptools>=77.0.3,<80.0.0",
+    "setuptools>=79.0.0,<80.0.0",
     "setuptools-scm>=8.0",
     "torch == 2.8.0",
-    "wheel",
     "jinja2",
+    "pyjwt>=2.10.1,<2.11.0",
+    "zipp==3.23.0",
+    "cryptography>=45.0.0,<46.0.0",
+    "oauthlib>=3.3.0,<4.0.0",
+    "wheel>=0.40.0,<1.0.0"
 ]
 build-backend = "setuptools.build_meta"
 

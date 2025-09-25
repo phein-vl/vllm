@@ -1,2 +1,7 @@
 # formatting
 pre-commit==4.0.1
+pyjwt>=2.10.1,<2.11.0
+zipp==3.23.0
+cryptography>=45.0.0,<46.0.0
+oauthlib>=3.3.0,<4.0.0
+wheel>=0.40.0,<1.0.0

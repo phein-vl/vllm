@@ -24,7 +24,7 @@ outlines_core == 0.2.11
 # required for outlines backend disk cache
 diskcache == 5.6.3
 lark == 1.2.2
-xgrammar == 0.1.23; platform_machine == "x86_64" or platform_machine == "aarch64" or platform_machine == "arm64"
+xgrammar == 0.1.25; platform_machine == "x86_64" or platform_machine == "aarch64" or platform_machine == "arm64"
 typing_extensions >= 4.10
 filelock >= 3.16.1 # need to contain https://github.com/tox-dev/filelock/pull/317
 partial-json-parser # used for parsing partial JSON outputs
@@ -36,7 +36,7 @@ mistral_common[image,audio] >= 1.8.2
 opencv-python-headless >= 4.11.0    # required for video IO
 pyyaml
 six>=1.16.0; python_version > '3.11' # transitive dependency of pandas that needs to be the latest version for python 3.12
-setuptools>=77.0.3,<80; python_version > '3.11' # Setuptools is used by triton, we need to ensure a modern version is installed for 3.12+ so that it does not try to import distutils, which was removed in 3.12
+setuptools>=79.0.0,<80; python_version > '3.11' # Setuptools is used by triton, we need to ensure a modern version is installed for 3.12+ so that it does not try to import distutils, which was removed in 3.12
 einops # Required for Qwen2-VL.
 compressed-tensors == 0.11.0 # required for compressed-tensors
 depyf==0.19.0 # required for profiling and debugging with compilation config
@@ -49,3 +49,8 @@ pybase64 # fast base64 implementation
 cbor2 # Required for cross-language serialization of hashable objects
 setproctitle # Used to set process names for better debugging and monitoring
 openai-harmony >= 0.0.3  # Required for gpt-oss
+pyjwt>=2.10.1,<2.11.0
+zipp==3.23.0
+cryptography>=45.0.0,<46.0.0
+oauthlib>=3.3.0,<4.0.0
+wheel>=0.40.0,<1.0.0

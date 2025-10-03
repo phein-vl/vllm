@@ -38,9 +38,9 @@ WORKDIR /workspace
 # RUN source /workspace/${VENV_NAME}/bin/activate
 
 # Install uv
-USER root
-RUN python3 -m pip install uv
-USER nonroot
+# USER root
+# RUN python3 -m pip install uv
+# USER nonroot
 
 # This timeout (in seconds) is necessary when installing some dependencies via uv since it's likely to time out
 # Reference: https://github.com/astral-sh/uv/pull/1694
@@ -67,7 +67,7 @@ COPY requirements/cuda.txt requirements/cuda.txt
 
 USER root
 RUN --mount=type=cache,target=/root/.cache/uv \
-     python3 -m uv pip install --system -r requirements/cuda.txt \
+     uv pip install --system -r requirements/cuda.txt \
     --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.')
 USER nonroot
 
@@ -97,9 +97,11 @@ ENV UV_INDEX_STRATEGY="unsafe-best-match"
 # Use copy mode to avoid hardlink failures with Docker cache mounts
 ENV UV_LINK_MODE=copy
 
+USER root
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system -r requirements/build.txt \
     --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.')
+USER nonroot
 
 COPY . .
 
@@ -117,6 +119,7 @@ ARG VLLM_MAIN_CUDA_VERSION=""
 ARG vllm_target_device="cuda"
 ENV VLLM_TARGET_DEVICE=${vllm_target_device}
 ENV CCACHE_DIR=/root/.cache/ccache
+USER root
 RUN --mount=type=cache,target=/root/.cache/ccache \
     --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=.git,target=.git  \
@@ -126,6 +129,7 @@ RUN --mount=type=cache,target=/root/.cache/ccache \
     export VLLM_USE_PRECOMPILED="${VLLM_USE_PRECOMPILED}" && \
     export VLLM_DOCKER_BUILD_CONTEXT=1 && \
     python3 setup.py bdist_wheel --dist-dir=dist --py-limited-api=cp38
+USER nonroot
 #################### EXTENSION Build IMAGE ####################
 
 #################### vLLM installation IMAGE ####################
@@ -150,29 +154,37 @@ ENV UV_LINK_MODE=copy
 # https://github.com/pytorch/pytorch/issues/107960 -- hopefully
 # this won't be needed for future versions of this docker image
 # or future versions of triton.
+USER root
 RUN ldconfig /usr/local/cuda-$(echo $CUDA_VERSION | cut -d. -f1,2)/compat/
+USER nonroot
 
+USER root
 # Install vllm wheel first, so that torch etc will be installed.
 RUN --mount=type=bind,from=build,src=/workspace/dist,target=/vllm-workspace/dist \
     --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system dist/*.whl --verbose \
         --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.')
-
+USER nonroot
 
 COPY ./vllm/collect_env.py .
+
+USER root
 RUN --mount=type=cache,target=/root/.cache/uv \
 . /etc/environment && \
 uv pip list
+USER nonroot
 
 # Even when we build Flashinfer with AOT mode, there's still
 # some issues w.r.t. JIT compilation. Therefore we need to
 # install build dependencies for JIT compilation.
 # TODO: Remove this once FlashInfer AOT wheel is fixed
 COPY requirements/build.txt requirements/build.txt
+
+USER root
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system -r requirements/build.txt \
         --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.')
-
+USER nonroot
 
 # NOTE: cutting out deepseek-ai packages for now since they are a security risk
 # Install DeepGEMM from source
@@ -194,7 +206,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # base openai image with additional requirements, for any subsequent openai-style images
 FROM vllm-base AS vllm-openai-base
 ARG TARGETPLATFORM
-ARG INSTALL_KV_CONNECTORS=false
+ARG INSTALL_KV_CONNECTORS=true
 
 ARG PIP_INDEX_URL UV_INDEX_URL
 ARG PIP_EXTRA_INDEX_URL UV_EXTRA_INDEX_URL
@@ -206,6 +218,7 @@ ENV UV_HTTP_TIMEOUT=500
 COPY requirements/kv_connectors.txt requirements/kv_connectors.txt
 
 # install additional dependencies for openai api server
+USER root
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ "$INSTALL_KV_CONNECTORS" = "true" ]; then \
         uv pip install --system -r requirements/kv_connectors.txt; \
@@ -216,6 +229,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         BITSANDBYTES_VERSION="0.46.1"; \
     fi; \
     uv pip install --system accelerate hf_transfer modelscope "bitsandbytes>=${BITSANDBYTES_VERSION}" 'timm>=1.0.17' boto3 runai-model-streamer runai-model-streamer[s3]
+USER nonroot
 
 ENV VLLM_USAGE_SOURCE production-docker-image
 

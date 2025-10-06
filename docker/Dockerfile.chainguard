@@ -52,7 +52,7 @@ ENV UV_LINK_MODE=copy
 USER root
 # RUN ln -s /usr/local/bin/gcc-12 /usr/local/cuda-12.8/bin/gcc
 # RUN ln -s /usr/local/bin/g++-12 /usr/local/cuda-12.8/bin/g++ 
-# RUN update-alternatives --force --install /usr/local/bin/gcc gcc /usr/local/bin/gcc-12 110 --slave /usr/local/bin/g++ g++ /usr/local/bin/g++-12
+RUN update-alternatives --force --install /usr/local/bin/gcc gcc /usr/local/bin/gcc-12 110 --slave /usr/local/bin/g++ g++ /usr/local/bin/g++-12
 USER nonroot
 
 RUN <<EOF
@@ -138,9 +138,9 @@ RUN --mount=type=cache,target=/root/.cache/ccache \
     mkdir -p .deps && \
     export VLLM_USE_PRECOMPILED="${VLLM_USE_PRECOMPILED}" && \
     export VLLM_DOCKER_BUILD_CONTEXT=1 && \
-    # export CC=/usr/local/bin/gcc-12 && \
-    # export CXX=/usr/local/bin/g++-12 && \
-    export NVCC_APPEND_FLAGS='-allow-unsupported-compiler' && \
+    export CC=/usr/local/bin/gcc-12 && \
+    export CXX=/usr/local/bin/g++-12 && \
+    # export NVCC_APPEND_FLAGS='-allow-unsupported-compiler' && \
     python3 setup.py bdist_wheel --dist-dir=dist --py-limited-api=cp38
 USER nonroot
 #################### EXTENSION Build IMAGE ####################
